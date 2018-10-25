@@ -34,12 +34,19 @@ def pytorch_rand_select_pixel(width,height,num_samples=1):
     return (two_rand_ints[0], two_rand_ints[1])
 
 def get_default_K_matrix():
-    K = numpy.zeros((3,3))
-    K[0,0] = 533.6422696034836 # focal x
-    K[1,1] = 534.7824445233571 # focal y
-    K[0,2] = 319.4091030774892 # principal point x
-    K[1,2] = 236.4374299691866 # principal point y
-    K[2,2] = 1.0
+    # K = numpy.zeros((3,3))
+    # K[0,0] = 533.6422696034836 # focal x
+    # K[1,1] = 534.7824445233571 # focal y
+    # K[0,2] = 319.4091030774892 # principal point x
+    # K[1,2] = 236.4374299691866 # principal point y
+    # K[2,2] = 1.0
+
+    K = np.zeros((3,3))
+    K[0,0] = 415.69219381653056
+    K[1,1] = -415.69219381653056
+    K[0,2] = -320
+    K[1,2] = -240
+    K[2,2] = -1.0
     return K
 
 def get_body_to_rdf():

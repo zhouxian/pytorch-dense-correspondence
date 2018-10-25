@@ -9,3 +9,7 @@ paladin-23:
 iiwa-2:
   manuelli:
     path_to_data_directory: '/home/manuelli/data'
+
+ubuntu-desktop:
+  zhouxian:
+    path_to_data_directory: '/home/zhouxian/git/pytorch-dense-correspondence'

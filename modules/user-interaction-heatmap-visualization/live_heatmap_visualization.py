@@ -24,7 +24,7 @@ COLOR_RED = np.array([0, 0, 255])
 COLOR_GREEN = np.array([0,255,0])
 
 utils.set_default_cuda_visible_devices()
-eval_config_filename = os.path.join(utils.getDenseCorrespondenceSourceDir(), 'config', 'dense_correspondence', 'evaluation', 'evaluation.yaml')
+eval_config_filename = os.path.join(utils.getDenseCorrespondenceSourceDir(), 'config', 'dense_correspondence', 'evaluation', 'evaluation_test.yaml')
 EVAL_CONFIG = utils.getDictFromYamlFilename(eval_config_filename)
 
 
@@ -302,7 +302,7 @@ class HeatmapVisualization(object):
 
 if __name__ == "__main__":
     dc_source_dir = utils.getDenseCorrespondenceSourceDir()
-    config_file = os.path.join(dc_source_dir, 'config', 'dense_correspondence', 'heatmap_vis', 'heatmap.yaml')
+    config_file = os.path.join(dc_source_dir, 'config', 'dense_correspondence', 'heatmap_vis', 'heatmap_test.yaml')
     config = utils.getDictFromYamlFilename(config_file)
 
     heatmap_vis = HeatmapVisualization(config)
