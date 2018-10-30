@@ -469,6 +469,8 @@ class DenseCorrespondenceTraining(object):
                     percent_complete = loss_current_iteration * 100.0/(max_num_iterations - start_iteration)
                     logging.info("Training is %d percent complete\n" %(percent_complete))
 
+                    logging.info("Training loss (current iteration): %.4f" % (loss.data[0]))
+
 
                 # don't compute the test loss on the first few times through the loop
                 if self._config["training"]["compute_test_loss"] and (loss_current_iteration % compute_test_loss_rate == 0) and loss_current_iteration > 5:

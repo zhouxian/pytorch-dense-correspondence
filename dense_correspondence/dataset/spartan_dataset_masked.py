@@ -187,9 +187,10 @@ class SpartanDataset(DenseCorrespondenceDataset):
 
         self._config = dict()
         self._config["logs_root_path"] = config['logs_root_path']
+        # self._config["multi_object_scenes_config_files"] = config['multi_object_scenes_config_files']
+        # self._config["single_object_scenes_config_files"] = config['single_object_scenes_config_files']
         self._config["single_object"] = self._single_object_scene_dict
         self._config["multi_object"] = self._multi_object_scene_dict
-
         self._setup_data_load_types()
 
     def _parse_expanded_config(self, config_expanded):

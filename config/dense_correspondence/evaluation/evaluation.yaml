@@ -3,8 +3,12 @@ params:
   num_matches_per_image_pair: 100
 
 networks:
-  caterpillar_3:
-    path_to_network_params: code/data_volume/pdc/trained_models/tutorials/caterpillar_3/003500.pth
+  all_3_3:
+    path_to_network_params: code/data_volume/pdc/trained_models/tutorials/all_3_3/003501.pth
+  duck_3:
+    path_to_network_params: /home/zhouxian/git/pytorch-dense-correspondence/pdc/trained_models/tutorials/duck_3/005001.pth
+  duck_robot_3:
+    path_to_network_params: /home/zhouxian/git/pytorch-dense-correspondence/pdc/trained_models/tutorials/duck_robot_3/000501.pth
 
 dataset: [] # which dataset to use, not used for now
 
