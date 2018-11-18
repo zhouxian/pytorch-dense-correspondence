@@ -280,8 +280,9 @@ class DenseCorrespondenceDataset(data.Dataset):
 
             diff = utils.compute_distance_between_poses(pose_a, pose)
             angle_diff = utils.compute_angle_between_poses(pose_a, pose)
-            if (diff > threshold) or (angle_diff > angle_threshold):
-                return img_idx
+            # if (diff > threshold) or (angle_diff > angle_threshold):
+            #     return img_idx
+            return img_idx
             counter += 1
 
         return None

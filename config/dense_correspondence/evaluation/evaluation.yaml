@@ -9,6 +9,10 @@ networks:
     path_to_network_params: /home/zhouxian/git/pytorch-dense-correspondence/pdc/trained_models/tutorials/duck_3/005001.pth
   duck_robot_3:
     path_to_network_params: /home/zhouxian/git/pytorch-dense-correspondence/pdc/trained_models/tutorials/duck_robot_3/000501.pth
+  toy_3:
+    path_to_network_params: /home/zhouxian/git/pytorch-dense-correspondence/pdc/trained_models/tutorials/toy_3/004500.pth
+  toy_old_3:
+    path_to_network_params: /home/zhouxian/git/pytorch-dense-correspondence/pdc/trained_models/tutorials/toy_old_3/005500.pth
 
 dataset: [] # which dataset to use, not used for now
 
