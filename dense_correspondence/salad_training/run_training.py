@@ -25,11 +25,9 @@ trainset = SaladDataset(config=config, mode='train')
 testset = SaladDataset(config=config, mode='test')
 
 logging_dir = "/home/zhouxian/git/pytorch-dense-correspondence/pdc/trained_models/"
-d = 32 # the descriptor dimension
+d = train_config["dense_correspondence_network"]["descriptor_dimension"] # the descriptor dimension
 name = "salad_%d" %(d)
 train_config["training"]["logging_dir_name"] = name
-train_config["training"]["logging_dir"] = logging_dir
-train_config["dense_correspondence_network"]["descriptor_dimension"] = d
 
 TRAIN = True
 EVALUATE = True
@@ -38,5 +36,4 @@ if TRAIN:
     print "training descriptor of dimension %d" %(d)
     train = DenseCorrespondenceTraining(dataset=trainset, dataset_test=testset, config=train_config)
     train.run()
-    # train.run_from_pretrained('/home/zhouxian/git/pytorch-dense-correspondence/pdc/trained_models/tutorials/backup/toy_hack_3')
     print "finished training descriptor of dimension %d" %(d)

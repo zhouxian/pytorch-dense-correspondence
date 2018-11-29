@@ -1,7 +1,6 @@
 #!/usr/bin/python
-
-
 import os
+import sys
 import dense_correspondence_manipulation.utils.utils as utils
 import logging
 utils.add_dense_correspondence_to_python_path()
@@ -24,6 +23,7 @@ import dense_correspondence.correspondence_tools.correspondence_plotter as corre
 import dense_correspondence.correspondence_tools.correspondence_finder as correspondence_finder
 from dense_correspondence.network.dense_correspondence_network import DenseCorrespondenceNetwork
 from dense_correspondence.loss_functions.pixelwise_contrastive_loss import PixelwiseContrastiveLoss
+import dense_correspondence.loss_functions.loss_composer as loss_composer
 
 import dense_correspondence.evaluation.plotting as dc_plotting
 
@@ -1784,6 +1784,74 @@ class DenseCorrespondenceEvaluation(object):
 
             if i > num_iterations:
                 break
+
+        loss_vec = np.array(loss_vec)
+        match_loss_vec = np.array(match_loss_vec)
+        non_match_loss_vec = np.array(non_match_loss_vec)
+
+        loss = np.average(loss_vec)
+        match_loss = np.average(match_loss_vec)
+        non_match_loss = np.average(non_match_loss_vec)
+
+        return loss, match_loss, non_match_loss
+
+
+    @staticmethod
+    def compute_loss_on_salad_dataset(dcn, data_loader, loss_config, num_iterations=500):
+        dcn.eval()
+
+        if num_iterations > len(data_loader.dataset):
+            num_iterations = len(data_loader.dataset)
+        loss_vec = []
+        match_loss_vec = []
+        non_match_loss_vec = []
+        counter = 0
+
+        pixelwise_contrastive_loss = PixelwiseContrastiveLoss(image_shape=dcn.image_shape, config=loss_config)
+        # Repeat M for background and masked
+        pixelwise_contrastive_loss._config['M_background'] = pixelwise_contrastive_loss._config['M_descriptor']
+        pixelwise_contrastive_loss._config['M_masked'] = pixelwise_contrastive_loss._config['M_descriptor']
+
+        batch_size = 1
+
+        for i, data in enumerate(data_loader, 0):
+            sys.stdout.write('\tTesting Image %d/%d \r' % (i+1, num_iterations)); sys.stdout.flush()
+            # get the inputs
+            match_type, img_a, img_b, matches_a, matches_b, non_matches_a, non_matches_b = data
+            
+            img_a = Variable(img_a.cuda(), requires_grad=False)
+            img_b = Variable(img_b.cuda(), requires_grad=False)
+
+            matches_a = Variable(matches_a.cuda().squeeze(0), requires_grad=False)
+            matches_b = Variable(matches_b.cuda().squeeze(0), requires_grad=False)
+            non_matches_a = Variable(non_matches_a.cuda().squeeze(0), requires_grad=False)
+            non_matches_b = Variable(non_matches_b.cuda().squeeze(0), requires_grad=False)
+            blind_non_matches_a = Variable(SpartanDataset.empty_tensor().cuda().squeeze(0), requires_grad=False)
+            blind_non_matches_b = Variable(SpartanDataset.empty_tensor().cuda().squeeze(0), requires_grad=False)
+
+            # run both images through the network
+            image_a_pred = dcn.forward(img_a)
+            image_a_pred = dcn.process_network_output(image_a_pred, batch_size)
+
+            image_b_pred = dcn.forward(img_b)
+            image_b_pred = dcn.process_network_output(image_b_pred, batch_size)
+
+            # get loss.
+            loss, match_loss, non_match_loss, masked_non_match_loss, background_non_match_loss, blind_non_match_loss \
+                = loss_composer.get_loss(pixelwise_contrastive_loss, match_type,
+                                        image_a_pred, image_b_pred,
+                                        matches_a,     matches_b,
+                                        non_matches_a, non_matches_b,
+                                        non_matches_a, non_matches_b,
+                                        blind_non_matches_a, blind_non_matches_b)
+
+            loss_vec.append(loss.data[0])
+            match_loss_vec.append(match_loss.data[0])
+            non_match_loss_vec.append(non_match_loss.data[0])
+
+            if i + 1 >= num_iterations:
+                break
+        print
 
         loss_vec = np.array(loss_vec)
         match_loss_vec = np.array(match_loss_vec)

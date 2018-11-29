@@ -55,7 +55,7 @@ class SaladDataset(data.Dataset):
         img_orig_rgb = np.array(img_orig_PIL)
 
         # sample pixels
-        uv_orig = self.get_random_pixels(width=img_orig_rgb.shape[1], height=img_orig_rgb.shape[0], num_samples=self.num_matching_pixels*5)
+        uv_orig = self.get_random_pixels(width=img_orig_rgb.shape[1], height=img_orig_rgb.shape[0], num_samples=self.num_matching_pixels*4)
         keypoints_on_images_orig = [ia.KeypointsOnImage.from_coords_array(coords=uv_orig, shape=img_orig_rgb.shape)]
         
         # augment image to generate a pair of images for training and find correspondences
@@ -73,10 +73,9 @@ class SaladDataset(data.Dataset):
         within_a = np.logical_and(uv_a >= [0, 0], uv_a < [img_orig_rgb.shape[1], img_orig_rgb.shape[0]])
         within_b = np.logical_and(uv_b >= [0, 0], uv_b < [img_orig_rgb.shape[1], img_orig_rgb.shape[0]])
         valid_ids = np.where(np.logical_and(within_a, within_b).all(axis=1))[0]
-
-        uv_orig = uv_orig[valid_ids]
-        uv_a = uv_a[valid_ids]
-        uv_b = uv_b[valid_ids]
+        uv_orig = uv_orig[valid_ids][:self.num_matching_pixels]
+        uv_a = uv_a[valid_ids][:self.num_matching_pixels]
+        uv_b = uv_b[valid_ids][:self.num_matching_pixels]
         
         if self.debug:
             img_a_cv = cv2.cvtColor(img_a_rgb, cv2.COLOR_RGB2BGR)
@@ -95,7 +94,7 @@ class SaladDataset(data.Dataset):
         uv_b = (torch.from_numpy(uv_b[:, 0]).type(torch.FloatTensor), torch.from_numpy(uv_b[:, 1]).type(torch.FloatTensor))
 
         # find non_correspondences
-        uv_b_non_matches = correspondence_finder.create_non_correspondences(uv_b, img_b_rgb.shape, num_non_matches_per_match=self.num_masked_non_matches_per_match)
+        uv_b_non_matches = correspondence_finder.create_non_correspondences(uv_b, img_b_rgb.shape, num_non_matches_per_match=self.num_non_matches_per_match)
 
         # convert PIL.Image to torch.FloatTensor
         image_a_rgb = self.rgb_image_to_tensor(img_a_rgb)
@@ -106,46 +105,13 @@ class SaladDataset(data.Dataset):
         matches_a = SaladDataset.flatten_uv_tensor(uv_a, image_width)
         matches_b = SaladDataset.flatten_uv_tensor(uv_b, image_width)
 
-        uv_a_long, uv_b_non_matches_long = self.create_non_matches(uv_a, uv_b_non_matches, self.num_masked_non_matches_per_match)
+        uv_a_long, uv_b_non_matches_long = self.create_non_matches(uv_a, uv_b_non_matches, self.num_non_matches_per_match)
 
         non_matches_a = SaladDataset.flatten_uv_tensor(uv_a_long, image_width).squeeze(1)
         non_matches_b = SaladDataset.flatten_uv_tensor(uv_b_non_matches_long, image_width).squeeze(1)
 
-        # make blind non matches
-        matches_a_mask = SaladDataset.mask_image_from_uv_flat_tensor(matches_a, image_width, image_height)
-        blind_non_matches_a = (1 - matches_a_mask).nonzero()
-
-        no_blind_matches_found = False
-        if len(blind_non_matches_a) == 0:
-            no_blind_matches_found = True
-        else:
-            blind_non_matches_a = blind_non_matches_a.squeeze(1)
-            num_blind_samples = blind_non_matches_a.size()[0]
-
-            if num_blind_samples > 0:
-                # blind_uv_b is a tuple of torch.LongTensor
-                # make sure we check that blind_uv_b is not None and that it is non-empty
-                
-
-                blind_uv_b = correspondence_finder.random_sample_from_masked_image_torch(image_b_mask_torch, num_blind_samples)
-
-                if blind_uv_b[0] is None:
-                    no_blind_matches_found = True
-                elif len(blind_uv_b[0]) == 0:
-                    no_blind_matches_found = True
-                else:    
-                    blind_non_matches_b = utils.uv_to_flattened_pixel_locations(blind_uv_b, image_width)
-
-                    if len(blind_non_matches_b) == 0:
-                        no_blind_matches_found = True
-            else:
-                no_blind_matches_found = True
-
-        if no_blind_matches_found:
-            blind_non_matches_a = blind_non_matches_b = SD.empty_tensor()
-                
-
-        return metadata["type"], image_a_rgb, image_b_rgb, matches_a, matches_b, masked_non_matches_a, masked_non_matches_b, background_non_matches_a, background_non_matches_b, blind_non_matches_a, blind_non_matches_b, metadata
+        # 5 is custom data type for distortion image training
+        return 5, image_a_rgb, image_b_rgb, matches_a, matches_b, non_matches_a, non_matches_b
 
     def get_random_pixels(self, width, height, num_samples):
         rand_us = np.random.rand(num_samples) * width
@@ -196,17 +162,7 @@ class SaladDataset(data.Dataset):
         """
 
         self.num_matching_pixels = int(training_config['training']['num_matching_pixels'])
-        self.sample_matches_only_off_mask = training_config['training']['sample_matches_only_off_mask']
-
         self.num_non_matches_per_match = training_config['training']["num_non_matches_per_match"]
-
-
-        self.num_masked_non_matches_per_match     = int(training_config['training']["fraction_masked_non_matches"] * self.num_non_matches_per_match)
-
-        self.num_background_non_matches_per_match = int(training_config['training'][
-                                                    "fraction_background_non_matches"] * self.num_non_matches_per_match)
-
-        self.cross_scene_num_samples              = training_config['training']["cross_scene_num_samples"]
 
 
     def scene_generator(self, mode=None):
