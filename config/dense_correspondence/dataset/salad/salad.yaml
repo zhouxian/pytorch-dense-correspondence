@@ -1,1 +1,5 @@
-dataset_dir: /home/zhouxian/git/pytorch-dense-correspondence/data/salad_dataset/
+trainset_dir: /home/zhouxian/git/pytorch-dense-correspondence/data/salads/TRAIN
+testset_dir: /home/zhouxian/git/pytorch-dense-correspondence/data/salads/VALIDATION
+img_name_format: '*.jpg'
+img_width: 640
+img_height: 480

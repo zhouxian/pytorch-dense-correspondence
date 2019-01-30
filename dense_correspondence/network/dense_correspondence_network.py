@@ -15,6 +15,7 @@ from torchvision import transforms
 from torch.autograd import Variable
 import pytorch_segmentation_detection.models.resnet_dilated as resnet_dilated
 from dense_correspondence.dataset.spartan_dataset_masked import SpartanDataset
+from dense_correspondence.dataset.salad_dataset import SaladDataset
 
 
 
@@ -248,6 +249,41 @@ class DenseCorrespondenceNetwork(nn.Module):
         return res
 
 
+    def forward_single_image_tensor_no_upsample(self, img_tensor):
+        """
+        Simple forward pass on the network.
+
+        Normalize the image if we are in TEST mode
+        If we are in TRAIN mode then assume the dataset object has already normalized
+        the image
+
+        :param img_tensor: torch.FloatTensor with shape [3,H,W]
+        :type img_tensor:
+        :return: torch.FloatTensor with shape  [H, W, D]
+        :rtype:
+        """
+
+        assert len(img_tensor.shape) == 3
+
+
+        # transform to shape [1,3,H,W]
+        img_tensor = img_tensor.unsqueeze(0)
+
+        # The fcn throws and error if we don't use a variable here . . .
+        # Maybe it's because it is in train mode?
+        img_tensor = Variable(img_tensor.cuda(), requires_grad=False)
+        # res = self.forward(img_tensor) # shape [1,D,H,W]
+        res = self.fcn.forward_no_upsample(img_tensor) 
+        # print "res.shape 1", res.shape
+
+
+        res = res.squeeze(0) # shape [D,H,W]
+        # print "res.shape 2", res.shape
+
+        res = res.permute(1,2,0) # shape [H,W,D]
+        # print "res.shape 3", res.shape
+
+        return res
 
     def process_network_output(self, image_pred, N):
         """
@@ -291,6 +327,19 @@ class DenseCorrespondenceNetwork(nn.Module):
         dataset_config_file = os.path.join(network_params_folder, 'dataset.yaml')
         config = utils.getDictFromYamlFilename(dataset_config_file)
         return SpartanDataset(config_expanded=config)
+
+    def load_salad_training_dataset(self):
+        """
+        Loads the dataset that this was trained on
+        :return: a dataset object, loaded with the config as set in the dataset.yaml
+        :rtype: SpartanDataset
+        """
+
+        network_params_folder = self.path_to_network_params_folder
+        network_params_folder = utils.convert_to_absolute_path(network_params_folder)
+        dataset_config_file = os.path.join(network_params_folder, 'dataset.yaml')
+        config = utils.getDictFromYamlFilename(dataset_config_file)
+        return SaladDataset(config=config)
 
     @staticmethod
     def from_config(config, load_stored_params=True):

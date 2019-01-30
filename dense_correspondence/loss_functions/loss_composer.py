@@ -24,10 +24,10 @@ def get_loss(pixelwise_contrastive_loss, match_type,
     # 5 is custom type for distortion image training
     if (match_type == 5).all():
         return get_salad_loss(pixelwise_contrastive_loss, image_a_pred, image_b_pred,
-                                            matches_a,    matches_b,
-                                            masked_non_matches_a, masked_non_matches_b,
-                                            background_non_matches_a, background_non_matches_b,
-                                            blind_non_matches_a, blind_non_matches_b)
+                                matches_a,    matches_b,
+                                masked_non_matches_a, masked_non_matches_b,
+                                background_non_matches_a, background_non_matches_b,
+                                blind_non_matches_a, blind_non_matches_b)
 
     if (match_type == SpartanDatasetDataType.SINGLE_OBJECT_WITHIN_SCENE).all():
         print "applying SINGLE_OBJECT_WITHIN_SCENE loss"

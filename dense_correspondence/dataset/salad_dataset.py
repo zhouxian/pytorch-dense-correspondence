@@ -78,6 +78,7 @@ class SaladDataset(data.Dataset):
         uv_b = uv_b[valid_ids][:self.num_matching_pixels]
         
         if self.debug:
+            self.aug_seq.show_grid(img_orig_rgb, cols=4, rows=4)
             img_a_cv = cv2.cvtColor(img_a_rgb, cv2.COLOR_RGB2BGR)
             img_b_cv = cv2.cvtColor(img_b_rgb, cv2.COLOR_RGB2BGR)
             for pix_a, pix_b in zip(uv_a, uv_b):
@@ -120,13 +121,18 @@ class SaladDataset(data.Dataset):
         return rand_uvs
 
     def setup_dataset(self, config):
-        self.dataset_dir = os.path.join(config['dataset_dir'], self.mode)
+        if self.mode == 'train':
+            self.dataset_dir = config['trainset_dir']
+        elif self.mode == 'test':
+            self.dataset_dir = config['testset_dir']
         self._initialize_rgb_image_to_tensor()
 
-        self._config = dict()
-        self._config["dataset_dir"] = config['dataset_dir']
+        self.img_width = config['img_width']
+        self.img_height = config['img_height']
 
-        images_regex = os.path.join(self.dataset_dir, "*.png")
+        self._config = config
+
+        images_regex = os.path.join(self.dataset_dir, config['img_name_format'])
         self.image_paths = glob.glob(images_regex)
         self.num_images = len(self.image_paths)
 
@@ -145,12 +151,14 @@ class SaladDataset(data.Dataset):
                 mode='reflect' 
             )),
             aug_sometimes_80(iaa.Add((-20, 20), per_channel=0.5)), # change brightness of images
-            aug_sometimes_50(iaa.AddToHueAndSaturation((-30, 30))), # change hue and saturation
+            aug_sometimes_50(iaa.AddToHueAndSaturation((-10, 10))), # change hue and saturation
         ])
 
     def get_PIL_img(self, index):
         img_file = self.image_paths[index]
-        return Image.open(img_file).convert('RGB')
+        img_PIL = Image.open(img_file).convert('RGB')
+        img_PIL = img_PIL.resize((self.img_width, self.img_height), Image.ANTIALIAS)
+        return img_PIL
 
     def set_parameters_from_training_config(self, training_config):
         """

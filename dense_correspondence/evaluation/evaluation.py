@@ -1815,7 +1815,6 @@ class DenseCorrespondenceEvaluation(object):
         batch_size = 1
 
         for i, data in enumerate(data_loader, 0):
-            sys.stdout.write('\tTesting Image %d/%d \r' % (i+1, num_iterations)); sys.stdout.flush()
             # get the inputs
             match_type, img_a, img_b, matches_a, matches_b, non_matches_a, non_matches_b = data
             
@@ -1845,6 +1844,8 @@ class DenseCorrespondenceEvaluation(object):
                                         non_matches_a, non_matches_b,
                                         blind_non_matches_a, blind_non_matches_b)
 
+            sys.stdout.write('\tTesting image %d/%d, loss: %.4f, match_loss: %.4f, non_match_loss: %.4f\r' % (i+1, num_iterations, loss.data[0],  match_loss.data[0], non_match_loss.data[0])); sys.stdout.flush()
+            
             loss_vec.append(loss.data[0])
             match_loss_vec.append(match_loss.data[0])
             non_match_loss_vec.append(non_match_loss.data[0])
